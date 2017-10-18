@@ -492,7 +492,7 @@ public class FindFRs {
         }
 
         try {
-            String paramString = "-k" + K + "-a" + alpha + "-kp" + kappa + "-sup" + minSup + "-size" + minLen;
+            String paramString = "-k" + K + "-a" + alpha + "-kp" + kappa + "-sup" + minSup + "-mlen" + minLen;
             if (useRC) {
                 paramString += "-rc";
             }
