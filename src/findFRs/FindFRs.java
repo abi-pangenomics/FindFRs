@@ -260,18 +260,18 @@ public class FindFRs {
             if (n != e.v && n.parent == null) {
                 neighbors.add(n);
             }
-            edgeQ.remove(ce);
-            n.edges.remove(ce);
+            //edgeQ.remove(ce);
+            //n.edges.remove(ce);
         }
-        e.u.edges.clear();
         for (ClusterEdge ce : e.v.edges) {
             ClusterNode n = ce.other(e.v);
             if (n != e.u && n.parent == null) {
                 neighbors.add(n);
             }
-            edgeQ.remove(ce);
-            n.edges.remove(ce);
+            //edgeQ.remove(ce);
+            //n.edges.remove(ce);
         }
+        e.u.edges.clear();
         e.v.edges.clear();
         for (ClusterNode n : neighbors) {
             ClusterNode tmpClst = new ClusterNode();
@@ -369,9 +369,9 @@ public class FindFRs {
             if (e.potentialSup > 0 && e.u.parent == null && e.v.parent == null) {
                 finalizeEdge(e);
                 count++;
-            }
-            if (count % 1000 == 0) {
-                System.out.println("# finalized: " + count);
+                if (count % 1000 == 0) {
+                    System.out.println("# finalized: " + count);
+                }
             }
         }
 
