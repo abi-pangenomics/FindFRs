@@ -96,18 +96,29 @@ public class FindFRs {
         sequences = ReadInput.readFastaFile(fastaFile);
     }
 
+    static char findFastaConcat(long[] seqStart, long index) {
+        int i = 0;
+        while (i < seqStart.length-1 && seqStart[i+1] < index) {
+            i++;
+        }
+        return sequences.get(i).seq.charAt((int) (index - seqStart[i]));
+        
+    }
+    
     static void buildPaths() {
         ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
         long curStart = 1;
-        long seqStart = 1;
+        long seqStart[] = new long[sequences.size()];
+        int index = 0;
+        seqStart[0] = 1;
         long seqEnd;
         //long prevStart = 0;
         for (Sequence s : sequences) {
             ArrayList path = new ArrayList<Integer>();
-            s.startPos = seqStart;
+            s.startPos = seqStart[index];
             s.length = s.seq.length();
-            seqEnd = seqStart + s.length - 1;
-            curStart = seqStart;
+            seqEnd = seqStart[index] + s.length - 1;
+            curStart = seqStart[index];
             while (curStart > 0 && !startToNode.containsKey(curStart)) {
                 curStart--;
             }
@@ -120,7 +131,9 @@ public class FindFRs {
             } while (startToNode.containsKey(curStart) && curStart + g.length[startToNode.get(curStart)] - 1 < seqEnd);
 
             pathsAL.add(path);
-            seqStart = seqEnd + 2;
+            if (index < sequences.size() - 1) {
+                seqStart[++index] = seqEnd + 2;
+            }
             //fastaConcatLen += 1 + s.seq.length();
         }
 //        fastaConcatLen++;
@@ -153,12 +166,12 @@ public class FindFRs {
         g.containsN = new boolean[g.numNodes];
         for (int i = 0; i < g.numNodes; i++) {
             g.containsN[i] = false;
-//            for (int j = 0; j < g.length[i]; j++) {
-//                if (fastaConcat[g.starts[i][0] + j] == 'N') {
-//                    g.containsN[i] = true;
-//                    break;
-//                }
-//            }
+            for (int j = 0; j < g.length[i]; j++) {
+                if (findFastaConcat(seqStart, g.starts[i][0] + j) == 'N') {
+                    g.containsN[i] = true;
+                    break;
+                }
+            }
         }
 
         // find paths for each node:
