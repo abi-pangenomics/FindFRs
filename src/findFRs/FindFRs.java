@@ -98,13 +98,36 @@ public class FindFRs {
 
     static char findFastaConcat(long[] seqStart, long index) {
         int i = 0;
-        while (i < seqStart.length-1 && seqStart[i+1] < index) {
-            i++;
+//        while (i < seqStart.length - 1 && seqStart[i + 1] <= index) {
+//            i++;
+//        }
+        int min = 0;
+        int max = seqStart.length - 1;
+        int mid = (min + max + 1) / 2;
+        while (min < max) {
+            if (seqStart[mid] < index) {
+                min = mid;
+                mid = (min + max + 1) / 2;
+
+            } else if (seqStart[mid] == index) {
+                min = max = mid;
+            } else if (seqStart[mid] > index) {
+                max = mid - 1;
+                mid = (min + max + 1) / 2;
+            }
         }
+//        if (mid != i) {
+//            System.out.println("here");
+//        }
+        i = mid;
+        if (index - seqStart[i] == sequences.get(i).seq.length()) {
+            return '$';
+        }
+
         return sequences.get(i).seq.charAt((int) (index - seqStart[i]));
-        
+
     }
-    
+
     static void buildPaths() {
         ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
         long curStart = 1;
@@ -122,7 +145,6 @@ public class FindFRs {
             while (curStart > 0 && !startToNode.containsKey(curStart)) {
                 curStart--;
             }
-            System.out.println("seqStart: " + seqStart + " curStart: " + curStart);
             path.add(startToNode.get(curStart));
             do {
                 curStart += g.length[startToNode.get(curStart)] - (K - 1);
@@ -169,7 +191,9 @@ public class FindFRs {
             g.containsN[i] = false;
             for (int j = 0; j < g.length[i]; j++) {
                 if (findFastaConcat(seqStart, g.starts[i][0] + j) == 'N') {
+//                        || findFastaConcat(seqStart, g.starts[i][0] + j) == '$') {
                     g.containsN[i] = true;
+                    System.out.println("node " + i + " contains N; ignored for FRs");
                     break;
                 }
             }
