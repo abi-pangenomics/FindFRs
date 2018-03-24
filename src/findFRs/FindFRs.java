@@ -122,6 +122,7 @@ public class FindFRs {
             while (curStart > 0 && !startToNode.containsKey(curStart)) {
                 curStart--;
             }
+            System.out.println("seqStart: " + seqStart + " curStart: " + curStart);
             path.add(startToNode.get(curStart));
             do {
                 curStart += g.length[startToNode.get(curStart)] - (K - 1);
