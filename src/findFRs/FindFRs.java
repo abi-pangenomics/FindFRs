@@ -18,7 +18,9 @@ public class FindFRs {
     static TreeMap<Long, Integer> startToNode;
     static int[][] paths;
 
-    static PriorityQueue<ClusterEdge> edgeQ;
+    //static PriorityQueue<ClusterEdge> edgeQ;
+    static ArrayList<ClusterEdge> edgeL;
+
     static PriorityQueue<ClusterNode> iFRQ;
     //static ClusterNode[] startNode;
 
@@ -322,7 +324,7 @@ public class FindFRs {
             ClusterEdge newE = new ClusterEdge(tmpClst.left, tmpClst.right, tmpClst.fwdSup + tmpClst.rcSup);
             newRoot.edges.add(newE);
             n.edges.add(newE);
-            edgeQ.add(newE);
+            //edgeQ.add(newE);
         }
     }
 
@@ -379,9 +381,10 @@ public class FindFRs {
             computeSupport(c, false, false);
         }
         // create initial edges
-        edgeQ = new PriorityQueue<ClusterEdge>();
+        //edgeQ = new PriorityQueue<ClusterEdge>();
+        edgeL = new ArrayList<ClusterEdge>();
         System.out.println("adding edges");
-        for (Integer N : nodeCluster.keySet()) {
+        for (Integer N : nodeCluster.keySet()) { // parallelize this.
             for (int i = 0; i < g.neighbor[N].length; i++) {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
                     ClusterNode tmpClst = new ClusterNode();
@@ -395,23 +398,30 @@ public class FindFRs {
                         ClusterEdge newE = new ClusterEdge(tmpClst.left, tmpClst.right, tmpClst.fwdSup + tmpClst.rcSup);
                         tmpClst.left.edges.add(newE);
                         tmpClst.right.edges.add(newE);
-                        edgeQ.add(newE);
+                        //edgeQ.add(newE);
+                        edgeL.add(newE);
                     }
                 }
             }
         }
-        System.out.println("edge queue size: " + edgeQ.size());
-        ClusterEdge e;
-        int count = 0;
-        while ((e = edgeQ.poll()) != null) {
-            if (e.potentialSup > 0 && e.u.parent == null && e.v.parent == null) {
-                finalizeEdge(e);
-                count++;
-                if (count % 1000 == 0) {
-                    System.out.println("# finalized: " + count);
-                }
-            }
-        }
+//        System.out.println("edge queue size: " + edgeQ.size());
+//        ClusterEdge e;
+//        int count = 0;
+//        while ((e = edgeQ.poll()) != null) {
+//            if (e.potentialSup > 0 && e.u.parent == null && e.v.parent == null) {
+//                finalizeEdge(e);
+//                count++;
+//                if (count % 1000 == 0) {
+//                    System.out.println("# finalized: " + count);
+//                }
+//            }
+//        }
+
+        System.out.println("edge list size: " + edgeL.size());
+        edgeL.parallelStream().forEach((E) -> {
+            
+        });
+        
 
         // recheck initial edges
         System.out.println("rechecking edges");
