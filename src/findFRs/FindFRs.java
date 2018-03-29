@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
+import java.util.stream.IntStream;
 
 public class FindFRs {
 
@@ -18,7 +19,7 @@ public class FindFRs {
     static TreeMap<Long, Integer> startToNode;
     static int[][] paths;
 
-    //static PriorityQueue<ClusterEdge> edgeQ;
+    static PriorityQueue<ClusterEdge> edgeQ;
     static ArrayList<ClusterEdge> edgeL;
 
     static PriorityQueue<ClusterNode> iFRQ;
@@ -381,7 +382,7 @@ public class FindFRs {
             computeSupport(c, false, false);
         }
         // create initial edges
-        //edgeQ = new PriorityQueue<ClusterEdge>();
+        edgeQ = new PriorityQueue<ClusterEdge>();
         edgeL = new ArrayList<ClusterEdge>();
         System.out.println("adding edges");
         for (Integer N : nodeCluster.keySet()) { // parallelize this.
@@ -394,19 +395,34 @@ public class FindFRs {
                     tmpClst.size = 2;
                     computeSupport(tmpClst, false, false);
                     tmpClst.pathLocs.clear();
-                    if (tmpClst.fwdSup + tmpClst.rcSup > 0) {
+                    int sup = tmpClst.fwdSup + tmpClst.rcSup;
+                    if (sup > tmpClst.left.bestNsup || (sup == tmpClst.left.bestNsup && tmpClst.right.bestNeighbor == tmpClst.left)) {
+                        tmpClst.left.bestNsup = sup;
+                        tmpClst.left.bestNeighbor = tmpClst.right;
                         ClusterEdge newE = new ClusterEdge(tmpClst.left, tmpClst.right, tmpClst.fwdSup + tmpClst.rcSup);
-                        tmpClst.left.edges.add(newE);
-                        tmpClst.right.edges.add(newE);
+                        //tmpClst.left.edges.add(newE);
+                        //tmpClst.right.edges.add(newE);
                         //edgeQ.add(newE);
                         edgeL.add(newE);
                     }
                 }
             }
         }
+        int numGps = (edgeL.size() + 99) / 100;
+        //for (int g = 0; g < numGps; g++) {
+        IntStream.range(0, numGps).parallel().forEach(g -> {
+            for (int j = 0; j < 100 && (g * numGps + j) < edgeL.size(); j++) {
+                ClusterEdge E = edgeL.get(g * numGps + j);
+                if (E.u.bestNeighbor == E.v && E.v.bestNeighbor == E.u) { // merge
+                    finalizeEdge(E);
+                }
+            }
+        });
+
+        System.exit(-1);
 //        System.out.println("edge queue size: " + edgeQ.size());
-//        ClusterEdge e;
-//        int count = 0;
+        ClusterEdge e;
+        int count = 0;
 //        while ((e = edgeQ.poll()) != null) {
 //            if (e.potentialSup > 0 && e.u.parent == null && e.v.parent == null) {
 //                finalizeEdge(e);
@@ -417,15 +433,18 @@ public class FindFRs {
 //            }
 //        }
 
-        System.out.println("edge list size: " + edgeL.size());
-        edgeL.parallelStream().forEach((E) -> {
-            
-        });
-        
+        System.out.println(
+                "edge list size: " + edgeL.size());
+        edgeL.parallelStream()
+                .forEach((E) -> {
+
+                });
 
         // recheck initial edges
-        System.out.println("rechecking edges");
-        for (Integer N : nodeCluster.keySet()) {
+        System.out.println(
+                "rechecking edges");
+        for (Integer N
+                : nodeCluster.keySet()) {
             for (int i = 0; i < g.neighbor[N].length; i++) {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
                     ClusterNode uroot = nodeCluster.get(N).findRoot();
@@ -448,7 +467,9 @@ public class FindFRs {
                 }
             }
         }
-        System.out.println("recheck edge queue size: " + edgeQ.size());
+
+        System.out.println(
+                "recheck edge queue size: " + edgeQ.size());
         count = 0;
         while ((e = edgeQ.poll()) != null) {
             if (e.potentialSup > 0 && e.u.parent == null && e.v.parent == null) {
@@ -459,18 +480,25 @@ public class FindFRs {
                 System.out.println("# finalized: " + count);
             }
         }
-        System.out.println("finding root FRs");
+
+        System.out.println(
+                "finding root FRs");
         HashSet<ClusterNode> roots = new HashSet<ClusterNode>();
-        for (ClusterNode leaf : nodeCluster.values()) {
+        for (ClusterNode leaf
+                : nodeCluster.values()) {
             roots.add(leaf.findRoot());
         }
 
         iFRQ = new PriorityQueue<ClusterNode>();
-        System.out.println("number of root FRs: " + roots.size());
+
+        System.out.println(
+                "number of root FRs: " + roots.size());
         for (ClusterNode root : roots) {
             reportIFRs(root, 0);
         }
-        System.out.println("number of iFRs: " + iFRQ.size());
+
+        System.out.println(
+                "number of iFRs: " + iFRQ.size());
     }
 
     static void reportIFRs(ClusterNode clust, int parentSup) {
