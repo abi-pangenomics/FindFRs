@@ -14,10 +14,12 @@ import java.util.concurrent.*;
 
 public class ClusterNode implements Comparable<ClusterNode> {
 
-    int node = -1;
+    int nodeNum = -1;
     ClusterNode parent, left, right;
     ConcurrentHashMap<Integer, int[]> pathLocs;
     int size = 0, fwdSup = 0, rcSup = 0, avgLen = 0;
+    
+    TreeSet<ClusterNode> neighbors = null;
     ClusterNode bestNeighbor = null;
     int bestNsup = 0;
     
@@ -35,7 +37,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
     }
 
     public boolean containsNode(int n) {
-        if (node == n) {
+        if (nodeNum == n) {
             return true;
         } else if (left != null) {
             return left.containsNode(n);
@@ -61,7 +63,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
 
     void addNodes(TreeSet<Integer> ns) {
         if (left == null && right == null) {
-            ns.add(node);
+            ns.add(nodeNum);
         }
         if (left != null) {
             left.addNodes(ns);
