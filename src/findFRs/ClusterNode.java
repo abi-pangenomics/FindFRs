@@ -18,6 +18,9 @@ public class ClusterNode implements Comparable<ClusterNode> {
     ClusterNode parent, left, right;
     ConcurrentHashMap<Integer, int[]> pathLocs;
     int size = 0, fwdSup = 0, rcSup = 0, avgLen = 0;
+    ClusterNode bestNeighbor = null;
+    int bestNsup = 0;
+    
     ArrayList<ClusterEdge> edges;
 
     public int compareTo(ClusterNode other) {
