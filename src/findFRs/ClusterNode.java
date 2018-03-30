@@ -16,7 +16,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
 
     int nodeNum = -1;
     ClusterNode parent, left, right;
-    ConcurrentHashMap<Integer, int[]> pathLocs;
+    HashMap<Integer, int[]> pathLocs;
     int size = 0, fwdSup = 0, rcSup = 0, avgLen = 0;
     
     TreeSet<ClusterNode> neighbors = null;
@@ -87,7 +87,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
         if (right != null && right.pathLocs == null) {
             right.findPathLocs();
         }
-        pathLocs = new ConcurrentHashMap<Integer, int[]>();
+        pathLocs = new HashMap<Integer, int[]>();
         HashSet<Integer> paths = new HashSet<Integer>();
         if (left != null) {
             paths.addAll(left.pathLocs.keySet());
