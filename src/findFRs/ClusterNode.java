@@ -16,14 +16,14 @@ public class ClusterNode implements Comparable<ClusterNode> {
 
     int nodeNum = -1;
     ClusterNode parent, left, right;
-    HashMap<Integer, int[]> pathLocs;
+    TreeMap<Integer, int[]> pathLocs;
     int size = 0, fwdSup = 0, rcSup = 0, avgLen = 0;
     
-    TreeSet<ClusterNode> neighbors = null;
-    ClusterNode bestNeighbor = null;
+    ConcurrentHashMap<ClusterNode, ClusterEdge> neighbors = null;
+   // ClusterNode bestNeighbor = null;
     int bestNsup = 0;
     
-    ArrayList<ClusterEdge> edges;
+    //ArrayList<ClusterEdge> edges;
 
     public int compareTo(ClusterNode other) {
         int result = Integer.compare(other.fwdSup + other.rcSup, fwdSup + rcSup);
@@ -80,22 +80,23 @@ public class ClusterNode implements Comparable<ClusterNode> {
         return ns;
     }
 
-    void findPathLocs() {
+    synchronized void findPathLocs() {
         if (left != null && left.pathLocs == null) {
             left.findPathLocs();
         }
         if (right != null && right.pathLocs == null) {
             right.findPathLocs();
         }
-        pathLocs = new HashMap<Integer, int[]>();
-        HashSet<Integer> paths = new HashSet<Integer>();
+        pathLocs = new TreeMap<Integer, int[]>();
+        TreeSet<Integer> paths = new TreeSet<Integer>();
         if (left != null) {
             paths.addAll(left.pathLocs.keySet());
         }
         if (right != null) {
             paths.addAll(right.pathLocs.keySet());
         }
-        paths.parallelStream().forEach((P) -> {
+        //paths.parallelStream().forEach((P) -> {
+        for (Integer P : paths) {
             int numlocs = 0;
             if (left.pathLocs.containsKey(P)) {
                 numlocs += left.pathLocs.get(P).length;
@@ -117,7 +118,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
             }
             Arrays.sort(arr);
             pathLocs.put(P, arr);
-        });
+        }
     }
 
 //    void addLocs(Map<Integer, ArrayList<Integer>> mergedLocs) {
