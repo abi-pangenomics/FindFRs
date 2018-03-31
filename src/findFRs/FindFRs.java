@@ -286,7 +286,7 @@ public class FindFRs {
 
     static void finalizeEdge(ClusterEdge e) {
         ClusterNode newRoot = new ClusterNode();
-        newRoot.nodeNum = numClusterNodes++;
+        newRoot.node = -(numClusterNodes++);
         newRoot.left = e.u;
         newRoot.right = e.v;
         newRoot.parent = null;
@@ -296,8 +296,12 @@ public class FindFRs {
         newRoot.right.parent = newRoot;
         newRoot.neighbors = new ConcurrentHashMap<ClusterNode, ClusterEdge>();
         newRoot.findPathLocs();
-        newRoot.left.pathLocs.clear();
-        newRoot.right.pathLocs.clear();
+        if (newRoot.left.node < 0) {
+            newRoot.left.pathLocs.clear();
+        }
+        if (newRoot.right.node < 0) {
+            newRoot.right.pathLocs.clear();
+        }
 
 //        computeSupport(newRoot, false, false);
 //
@@ -348,8 +352,8 @@ public class FindFRs {
                     && (!useRC || g.nodePaths.get(N).first() < paths.length / 2)) { // only start with nodes from non-rc'ed paths
                 ClusterNode nodeClst = new ClusterNode();
                 nodeClst.parent = nodeClst.left = nodeClst.right = null;
-                //nodeClst.node = N;
-                nodeClst.nodeNum = numClusterNodes++;
+                nodeClst.node = N;
+                //nodeClst.node = numClusterNodes++;
                 nodeClst.size = 1;
                 nodeClst.findPathLocs();
                 //nodeClst.edges = new ArrayList<ClusterEdge>();
@@ -435,6 +439,7 @@ public class FindFRs {
             });
             System.out.println("checkNodes size: " + checkNodes.size());
             checkNodes.parallelStream().forEach((u) -> {
+                //for (ClusterNode u : checkNodes) {
                 u.bestNsup = -1;
                 for (ClusterNode v : u.neighbors.keySet()) {
                     ClusterEdge E = u.neighbors.get(v);
@@ -452,18 +457,15 @@ public class FindFRs {
                     edgeM.add(E);
                     E.u.bestNsup = -1;
                     E.v.bestNsup = -1;
-//                    if (edgeM.size() > 10) {
-//                        break;
-//                    }
                 }
             }
-            if (edgeM.isEmpty() && !edgeL.isEmpty()) {
-                ClusterEdge E = edgeL.poll();
-                if (E.potentialSup > 0) {
-                    finalizeEdge(E);
-                    edgeM.add(E);
-                }
-            }
+//            if (edgeM.isEmpty() && !edgeL.isEmpty()) {
+//                ClusterEdge E = edgeL.poll();
+//                if (E.potentialSup > 0) {
+//                    finalizeEdge(E);
+//                    edgeM.add(E);
+//                }
+//            }
             System.out.println("edgeM size: " + edgeM.size());
             edgeL.clear();
             for (ClusterEdge E : edgeM) {
@@ -540,10 +542,13 @@ public class FindFRs {
         if ((clust.fwdSup + clust.rcSup) > parentSup
                 && (clust.fwdSup + clust.rcSup) >= minSup
                 && clust.fwdSup >= clust.rcSup) {
+            int oldsup = clust.fwdSup + clust.rcSup;
             computeSupport(clust, false, true);
-            if (clust.avgLen >= minLen) {
-                iFRQ.add(clust);
+            int newsup = clust.fwdSup + clust.rcSup;
+            if (oldsup != newsup) {
+                System.out.println("problem");
             }
+            iFRQ.add(clust);
         }
         if (clust.left != null) {
             reportIFRs(clust.left, Math.max(parentSup, clust.fwdSup + clust.rcSup));
@@ -595,11 +600,13 @@ public class FindFRs {
         ClusterNode top;
         ArrayList<ClusterNode> iFRs = new ArrayList<ClusterNode>();
         while ((top = iFRQ.poll()) != null) {
-            iFRs.add(top);
+            if (top.avgLen >= minLen) {
+                iFRs.add(top);
+            }
         }
 
         try {
-            String paramString = "-k" + K + "-a" + alpha + "-kp" + kappa + "-sup" + minSup + "-mlen" + minLen;
+            String paramString = "-k" + K + "-a" + alpha + "-kp" + kappa + "-sup" + minSup;// + "-mlen" + minLen;
             if (useRC) {
                 paramString += "-rc";
             }

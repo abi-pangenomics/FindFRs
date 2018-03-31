@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 
 public class ClusterNode implements Comparable<ClusterNode> {
 
-    int nodeNum = -1;
+    int node = -1;
     ClusterNode parent, left, right;
     TreeMap<Integer, int[]> pathLocs;
     int size = 0, fwdSup = 0, rcSup = 0, avgLen = 0;
@@ -37,7 +37,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
     }
 
     public boolean containsNode(int n) {
-        if (nodeNum == n) {
+        if (node == n) {
             return true;
         } else if (left != null) {
             return left.containsNode(n);
@@ -63,7 +63,7 @@ public class ClusterNode implements Comparable<ClusterNode> {
 
     void addNodes(TreeSet<Integer> ns) {
         if (left == null && right == null) {
-            ns.add(nodeNum);
+            ns.add(node);
         }
         if (left != null) {
             left.addNodes(ns);
