@@ -450,7 +450,7 @@ public class FindFRs {
             checkNodes.clear();
             edgeM.clear();
             for (ClusterEdge E : edgeL) {
-                if (E.potentialSup == E.u.bestNsup && E.potentialSup == E.v.bestNsup) {
+                if (E.potentialSup > 0 && E.potentialSup == E.u.bestNsup && E.potentialSup == E.v.bestNsup) {
                     finalizeEdge(E);
                     edgeM.add(E);
                     E.u.bestNsup = -1;
