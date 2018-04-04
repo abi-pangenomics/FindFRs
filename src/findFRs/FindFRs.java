@@ -294,7 +294,7 @@ public class FindFRs {
         newRoot.size = newRoot.left.size + newRoot.right.size;
         newRoot.left.parent = newRoot;
         newRoot.right.parent = newRoot;
-        newRoot.findPathLocs();
+        computeSupport(newRoot, false, false);
         if (newRoot.left.node < 0) {
             newRoot.left.pathLocs.clear();
         }
@@ -303,7 +303,6 @@ public class FindFRs {
         }
         newRoot.neighbors = new ConcurrentHashMap<ClusterNode, ClusterEdge>();
 
-//        computeSupport(newRoot, false, false);
 //
 //        //System.out.println("merging: left size: " + e.u.size + " right size: " + e.v.size + " support: " + e.potentialSup);
 //        TreeSet<ClusterNode> neighbors = new TreeSet<ClusterNode>();
@@ -403,7 +402,7 @@ public class FindFRs {
         Set<ClusterNode> checkNodes = ConcurrentHashMap.newKeySet();
 
         System.out.println("adding neighbors");
-        for (Integer N : nodeCluster.keySet()) { 
+        for (Integer N : nodeCluster.keySet()) {
             for (int i = 0; i < g.neighbor[N].length; i++) {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
                     ClusterNode u = nodeCluster.get(N);
@@ -458,51 +457,45 @@ public class FindFRs {
                 }
             }
             System.out.println("edgeM size: " + edgeM.size());
-            edgeL.clear();
+            //edgeL.clear();
             for (ClusterEdge E : edgeM) {
                 ClusterNode newClst = E.u.parent;
-                ClusterEdge e = null;
                 for (ClusterNode n : newClst.left.neighbors.keySet()) {
-                    e = newClst.left.neighbors.get(n);
+                    ClusterEdge e = newClst.left.neighbors.get(n);
                     e.u = newClst;
                     e.potentialSup = -1;
-                    if (n.parent == null) {
-                        e.v = n;
-                        newClst.neighbors.put(n, e);
-                        n.neighbors.put(newClst, e);
-                    } else {
-                        e.v = n.parent;
-                        newClst.neighbors.put(n.parent, e);
-                        n.parent.neighbors.put(newClst, e);
-                    }
+                    e.v = n;
+                    newClst.neighbors.put(n, e);
+                    n.neighbors.put(newClst, e);
+                    n.neighbors.remove(newClst.left);
                 }
                 for (ClusterNode n : newClst.right.neighbors.keySet()) {
-                    e = newClst.right.neighbors.get(n);
+                    ClusterEdge e = newClst.right.neighbors.get(n);
                     e.u = newClst;
                     e.potentialSup = -1;
-                    if (n.parent == null) {
-                        e.v = n;
-                        newClst.neighbors.put(n, e);
-                        n.neighbors.put(newClst, e);
+                    e.v = n;
+                    if (newClst.neighbors.contains(n)) {
+                        edgeL.remove(e);
                     } else {
-                        e.v = n.parent;
-                        newClst.neighbors.put(n.parent, e);
-                        n.parent.neighbors.put(newClst, e);
+                        newClst.neighbors.put(n, e);
                     }
+                    n.neighbors.put(newClst, e);
+                    n.neighbors.remove(newClst.right);
                 }
                 newClst.neighbors.remove(newClst);
-                edgeL.addAll(newClst.neighbors.values());
+                //edgeL.addAll(newClst.neighbors.values());
             }
             Iterator<ClusterEdge> i = edgeL.iterator();
             while (i.hasNext()) {
                 ClusterEdge e = i.next();
+                if (e.u.parent != null || e.v.parent != null) {
+                    i.remove();
+                }
                 if (e.u.parent != null) {
                     e.u.neighbors.clear();
-                    i.remove();
                 }
                 if (e.v.parent != null) {
                     e.v.neighbors.clear();
-                    i.remove();
                 }
             }
 
