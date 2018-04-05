@@ -409,10 +409,12 @@ public class FindFRs {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
                     ClusterNode u = nodeCluster.get(N);
                     ClusterNode v = nodeCluster.get(g.neighbor[N][i]);
-                    ClusterEdge e = new ClusterEdge(u, v, -1, 0);
-                    edgeL.add(e);
-                    u.neighbors.put(v, e);
-                    v.neighbors.put(u, e);
+                    if (!u.neighbors.containsKey(v)) {
+                        ClusterEdge e = new ClusterEdge(u, v, -1, 0);
+                        edgeL.add(e);
+                        u.neighbors.put(v, e);
+                        v.neighbors.put(u, e);
+                    }
                 }
             }
         }
@@ -442,8 +444,8 @@ public class FindFRs {
                 u.bestNsup = -1;
                 for (ClusterNode v : u.neighbors.keySet()) {
                     ClusterEdge E = u.neighbors.get(v);
-                    if (E.fwdSup > u.bestNsup) {
-                        u.bestNsup = E.fwdSup;
+                    if (E.sup() > u.bestNsup) {
+                        u.bestNsup = E.sup();
                         //u.bestNeighbor = v;
                     }
                 }
@@ -465,31 +467,44 @@ public class FindFRs {
             for (ClusterEdge E : edgeM) {
                 ClusterNode newClst = E.u.parent;
                 for (ClusterNode n : newClst.left.neighbors.keySet()) {
-                    ClusterEdge e = newClst.left.neighbors.get(n);
-                    e.u = newClst;
-                    e.fwdSup = -1;
-                    e.v = n;
-                    newClst.neighbors.put(n, e);
-                    n.neighbors.put(newClst, e);
-                    n.neighbors.remove(newClst.left);
-                }
-                for (ClusterNode n : newClst.right.neighbors.keySet()) {
-                    ClusterEdge e = newClst.right.neighbors.get(n);
-                    e.u = newClst;
-                    e.fwdSup = -1;
-                    e.v = n;
-                    if (newClst.neighbors.contains(n)) {
-                        edgeL.remove(e);
-                    } else {
+                    if (n != newClst.right) {
+                        ClusterEdge e = newClst.left.neighbors.get(n);
+                        e.u = newClst;
+                        e.fwdSup = -1;
+                        e.v = n;
                         newClst.neighbors.put(n, e);
                     }
+                }
+
+                for (ClusterNode n : newClst.right.neighbors.keySet()) {
+                    if (n != newClst.left) {
+                        ClusterEdge e = newClst.right.neighbors.get(n);
+                        e.u = newClst;
+                        e.fwdSup = -1;
+                        e.v = n;
+                        if (newClst.neighbors.contains(n)) {
+                            edgeL.remove(e);
+                        } else {
+                            newClst.neighbors.put(n, e);
+                        }
+                    }
+                }
+                for (ClusterNode n : newClst.neighbors.keySet()) {
+                    ClusterEdge e = newClst.neighbors.get(n);
                     n.neighbors.put(newClst, e);
+                    n.neighbors.remove(newClst.left);
                     n.neighbors.remove(newClst.right);
                 }
-                newClst.neighbors.remove(newClst);
-                //edgeL.addAll(newClst.neighbors.values());
+                if (newClst.neighbors.containsKey(newClst)) {
+                    System.out.println("oops");
+                    newClst.neighbors.remove(newClst);
+                }
+                newClst.left.neighbors.clear();
+                newClst.right.neighbors.clear();
+                edgeL.remove(E);
             }
             Iterator<ClusterEdge> i = edgeL.iterator();
+
             while (i.hasNext()) {
                 ClusterEdge e = i.next();
                 if (e.u.parent != null || e.v.parent != null) {
