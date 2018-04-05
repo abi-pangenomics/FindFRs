@@ -294,13 +294,15 @@ public class FindFRs {
         newRoot.size = newRoot.left.size + newRoot.right.size;
         newRoot.left.parent = newRoot;
         newRoot.right.parent = newRoot;
-        computeSupport(newRoot, false, false);
-        if (newRoot.left.node < 0) {
-            newRoot.left.pathLocs.clear();
-        }
-        if (newRoot.right.node < 0) {
-            newRoot.right.pathLocs.clear();
-        }
+        newRoot.findPathLocs();
+//        newRoot.findPathLocs();
+//        computeSupport(newRoot, false, false);
+//        if (newRoot.left.node < 0) {
+//            newRoot.left.pathLocs.clear();
+//        }
+//        if (newRoot.right.node < 0) {
+//            newRoot.right.pathLocs.clear();
+//        }
         newRoot.neighbors = new ConcurrentHashMap<ClusterNode, ClusterEdge>();
 
 //
@@ -407,7 +409,7 @@ public class FindFRs {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
                     ClusterNode u = nodeCluster.get(N);
                     ClusterNode v = nodeCluster.get(g.neighbor[N][i]);
-                    ClusterEdge e = new ClusterEdge(u, v, -1);
+                    ClusterEdge e = new ClusterEdge(u, v, -1, 0);
                     edgeL.add(e);
                     u.neighbors.put(v, e);
                     v.neighbors.put(u, e);
@@ -420,7 +422,7 @@ public class FindFRs {
             System.out.println("number of cluster nodes: " + numClusterNodes);
             System.out.println("edgeL size: " + edgeL.size());
             edgeL.parallelStream().forEach((E) -> {
-                if (E.potentialSup < 0) {
+                if (E.fwdSup < 0) {
                     ClusterNode tmpClst = new ClusterNode();
                     tmpClst.left = E.u;
                     tmpClst.right = E.v;
@@ -428,8 +430,8 @@ public class FindFRs {
                     tmpClst.size = E.u.size + E.v.size;
                     computeSupport(tmpClst, false, false);
                     tmpClst.pathLocs.clear();
-                    int sup = tmpClst.fwdSup + tmpClst.rcSup;
-                    E.potentialSup = sup;
+                    E.fwdSup = tmpClst.fwdSup;
+                    E.rcSup = tmpClst.rcSup;
                     checkNodes.add(E.u);
                     checkNodes.add(E.v);
                 }
@@ -440,8 +442,8 @@ public class FindFRs {
                 u.bestNsup = -1;
                 for (ClusterNode v : u.neighbors.keySet()) {
                     ClusterEdge E = u.neighbors.get(v);
-                    if (E.potentialSup > u.bestNsup) {
-                        u.bestNsup = E.potentialSup;
+                    if (E.fwdSup > u.bestNsup) {
+                        u.bestNsup = E.fwdSup;
                         //u.bestNeighbor = v;
                     }
                 }
@@ -449,11 +451,13 @@ public class FindFRs {
             checkNodes.clear();
             edgeM.clear();
             for (ClusterEdge E : edgeL) {
-                if (E.potentialSup > 0 && E.potentialSup == E.u.bestNsup && E.potentialSup == E.v.bestNsup) {
+                if (E.sup() > 0 && E.sup() == E.u.bestNsup && E.sup() == E.v.bestNsup) {
                     finalizeEdge(E);
                     edgeM.add(E);
                     E.u.bestNsup = -1;
                     E.v.bestNsup = -1;
+                    E.u.parent.fwdSup = E.fwdSup;
+                    E.u.parent.rcSup = E.rcSup;
                 }
             }
             System.out.println("edgeM size: " + edgeM.size());
@@ -463,7 +467,7 @@ public class FindFRs {
                 for (ClusterNode n : newClst.left.neighbors.keySet()) {
                     ClusterEdge e = newClst.left.neighbors.get(n);
                     e.u = newClst;
-                    e.potentialSup = -1;
+                    e.fwdSup = -1;
                     e.v = n;
                     newClst.neighbors.put(n, e);
                     n.neighbors.put(newClst, e);
@@ -472,7 +476,7 @@ public class FindFRs {
                 for (ClusterNode n : newClst.right.neighbors.keySet()) {
                     ClusterEdge e = newClst.right.neighbors.get(n);
                     e.u = newClst;
-                    e.potentialSup = -1;
+                    e.fwdSup = -1;
                     e.v = n;
                     if (newClst.neighbors.contains(n)) {
                         edgeL.remove(e);
@@ -490,6 +494,7 @@ public class FindFRs {
                 ClusterEdge e = i.next();
                 if (e.u.parent != null || e.v.parent != null) {
                     i.remove();
+                    System.out.println("r");
                 }
                 if (e.u.parent != null) {
                     e.u.neighbors.clear();
