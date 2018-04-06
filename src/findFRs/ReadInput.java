@@ -21,7 +21,7 @@ public class ReadInput {
         TreeMap<Integer, ArrayList<Integer>> nodeStarts = new TreeMap<Integer, ArrayList<Integer>>();
         TreeMap<Integer, Integer> nodeLength = new TreeMap<Integer, Integer>();
         g.maxStart = 0;
-
+        int minLen = Integer.MAX_VALUE;
         System.out.println("reading dot file: " + fileName);
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(fileName))));
@@ -44,6 +44,8 @@ public class ReadInput {
                         nodeStarts.get(node).add(start);
                         g.maxStart = Math.max(g.maxStart, start);
                     }
+                    int nodeLen = Integer.parseInt(l[1]);
+                    minLen = Math.min(minLen, nodeLen);
                     nodeLength.put(node, Integer.parseInt(l[1]));
 //                    if (node % 50000 == 0) {
 //                        System.out.println("reading node: " + node);
@@ -63,6 +65,8 @@ public class ReadInput {
             ex.printStackTrace();
             System.exit(-1);
         }
+        System.out.println("K = " + minLen);
+        FindFRs.K = minLen;
         g.numNodes = nodeNeighbors.keySet().size();
         System.out.println("number of nodes: " + g.numNodes);
         g.neighbor = new int[g.numNodes][];

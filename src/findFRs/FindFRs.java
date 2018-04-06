@@ -501,7 +501,7 @@ public class FindFRs {
         }
 
         try {
-            String paramString = "-k" + K + "-a" + alpha + "-kp" + kappa + "-sup" + minSup;// + "-mlen" + minLen;
+            String paramString = "-a" + alpha + "-kp" + kappa + "-sup" + minSup;// + "-mlen" + minLen;
             if (useRC) {
                 paramString += "-rc";
             }
@@ -639,19 +639,19 @@ public class FindFRs {
 
     public static void main(String[] args) {
         // parse args:
-        if (args.length != 8) {
-            System.out.println("Usage: java findFRs dotFile faFile K alpha kappa minsup minlen rcBool");
+        if (args.length != 7) {
+            System.out.println("Usage: java findFRs dotFile faFile alpha kappa minsup minlen rcBool");
             System.out.println(Arrays.toString(args));
             System.exit(0);
         }
         dotFile = args[0];
         fastaFile = args[1];
-        K = Integer.parseInt(args[2]);
-        alpha = Double.parseDouble(args[3]);
-        kappa = Integer.parseInt(args[4]);
-        minSup = Integer.parseInt(args[5]);
-        minLen = Integer.parseInt(args[6]);
-        useRC = args[7].startsWith("T") || args[7].startsWith("t");
+        //K = Integer.parseInt(args[2]);
+        alpha = Double.parseDouble(args[2]);
+        kappa = Integer.parseInt(args[3]);
+        minSup = Integer.parseInt(args[4]);
+        minLen = Integer.parseInt(args[5]);
+        useRC = args[6].startsWith("T") || args[6].startsWith("t");
 
         readData();
         buildPaths();
