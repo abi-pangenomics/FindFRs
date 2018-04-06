@@ -295,7 +295,7 @@ public class FindFRs {
         newRoot.left.parent = newRoot;
         newRoot.right.parent = newRoot;
         newRoot.findPathLocs();
-//        newRoot.findPathLocs();
+
 //        computeSupport(newRoot, false, false);
 //        if (newRoot.left.node < 0) {
 //            newRoot.left.pathLocs.clear();
@@ -421,8 +421,8 @@ public class FindFRs {
         ArrayList<ClusterEdge> edgeM = new ArrayList<ClusterEdge>();
 
         do {
-            System.out.println("number of cluster nodes: " + numClusterNodes);
-            System.out.println("edgeL size: " + edgeL.size());
+            //System.out.println("number of cluster nodes: " + numClusterNodes);
+            System.out.println("# of edges: " + edgeL.size());
             edgeL.parallelStream().forEach((E) -> {
                 if (E.fwdSup < 0) {
                     ClusterNode tmpClst = new ClusterNode();
@@ -438,7 +438,7 @@ public class FindFRs {
                     checkNodes.add(E.v);
                 }
             });
-            System.out.println("checkNodes size: " + checkNodes.size());
+            //System.out.println("checkNodes size: " + checkNodes.size());
             checkNodes.parallelStream().forEach((u) -> {
                 //for (ClusterNode u : checkNodes) {
                 u.bestNsup = -1;
@@ -446,7 +446,6 @@ public class FindFRs {
                     ClusterEdge E = u.neighbors.get(v);
                     if (E.sup() > u.bestNsup) {
                         u.bestNsup = E.sup();
-                        //u.bestNeighbor = v;
                     }
                 }
             });
@@ -462,8 +461,7 @@ public class FindFRs {
                     E.u.parent.rcSup = E.rcSup;
                 }
             }
-            System.out.println("edgeM size: " + edgeM.size());
-            //edgeL.clear();
+            System.out.println("matching size: " + edgeM.size());
             for (ClusterEdge E : edgeM) {
                 ClusterNode newClst = E.u.parent;
                 for (ClusterNode n : newClst.left.neighbors.keySet()) {
@@ -475,16 +473,15 @@ public class FindFRs {
                         newClst.neighbors.put(n, e);
                     }
                 }
-
                 for (ClusterNode n : newClst.right.neighbors.keySet()) {
                     if (n != newClst.left) {
                         ClusterEdge e = newClst.right.neighbors.get(n);
-                        e.u = newClst;
-                        e.fwdSup = -1;
-                        e.v = n;
-                        if (newClst.neighbors.contains(n)) {
+                        if (newClst.neighbors.containsKey(n)) {
                             edgeL.remove(e);
                         } else {
+                            e.u = newClst;
+                            e.fwdSup = -1;
+                            e.v = n;
                             newClst.neighbors.put(n, e);
                         }
                     }
@@ -495,30 +492,24 @@ public class FindFRs {
                     n.neighbors.remove(newClst.left);
                     n.neighbors.remove(newClst.right);
                 }
-                if (newClst.neighbors.containsKey(newClst)) {
-                    System.out.println("oops");
-                    newClst.neighbors.remove(newClst);
-                }
                 newClst.left.neighbors.clear();
                 newClst.right.neighbors.clear();
                 edgeL.remove(E);
             }
-            Iterator<ClusterEdge> i = edgeL.iterator();
-
-            while (i.hasNext()) {
-                ClusterEdge e = i.next();
-                if (e.u.parent != null || e.v.parent != null) {
-                    i.remove();
-                    System.out.println("r");
-                }
-                if (e.u.parent != null) {
-                    e.u.neighbors.clear();
-                }
-                if (e.v.parent != null) {
-                    e.v.neighbors.clear();
-                }
-            }
-
+//            Iterator<ClusterEdge> i = edgeL.iterator();
+//            while (i.hasNext()) {
+//                ClusterEdge e = i.next();
+//                if (e.u.parent != null || e.v.parent != null) {
+//                    i.remove();
+//                    System.out.println("r");
+//                }
+//                if (e.u.parent != null) {
+//                    e.u.neighbors.clear();
+//                }
+//                if (e.v.parent != null) {
+//                    e.v.neighbors.clear();
+//                }
+//            }
         } while (!edgeM.isEmpty());
 
         System.out.println("finding root FRs");
