@@ -9,8 +9,22 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
 import java.util.stream.IntStream;
+import org.apache.commons.cli.*;
+import org.biojava.nbio.genome.parsers.gff.*;
 
 public class FindFRs {
+
+    // parameters:
+    static String dotFile = ""; // .dot filename
+    static String fastaFile = ""; // .fasta filename
+    static String gffFile = ""; // .gff filename
+    static int K = -1; // k-mer size
+    static double alpha = 0.7; // epsilon_r parameter
+    static int kappa = 0; // maxInsert parameter
+    static int minSup = 1;
+    static int minLen = 1;
+    static boolean useRC = false; // indicates if fasta file was appended with its reverse-complement
+    static double minGC = 0.0;
 
     static Graph g;
     static ArrayList<Sequence> sequences;
@@ -19,25 +33,12 @@ public class FindFRs {
     static TreeMap<Long, Integer> startToNode;
     static int[][] paths;
 
-    //static PriorityQueue<ClusterEdge> edgeQ;
     static ArrayList<ClusterEdge> edgeL;
-
     static PriorityBlockingQueue<ClusterNode> iFRQ;
-    //static ClusterNode[] startNode;
-
     static ConcurrentHashMap<Integer, ClusterNode> nodeCluster;
     static int numClusterNodes = 0;
-    
-    // command line arguments:
-    static String dotFile = ""; // .dot filename
-    static String fastaFile = ""; // .fasta filename
-    static int K = -1; // k-mer size
-    static double alpha = 0.7; // epsilon_r parameter
-    static int kappa = 0; // maxInsert parameter
-    static int minSup;
-    static int minLen;
-    static boolean useRC; // indicates if fasta file was appended with its reverse-complement
-    //static String filePrefix = ""; // file name prefix
+
+    static FeatureList gffFeatures;
 
     static String[] colors = {"122,39,25", "92,227,60", "225,70,233", "100,198,222", "232,176,49", "50,39,85",
         "67,101,33", "222,142,186", "92,119,227", "206,225,151", "227,44,118", "229,66,41",
@@ -98,6 +99,16 @@ public class FindFRs {
         }
 
         sequences = ReadInput.readFastaFile(fastaFile);
+
+        if (gffFile != "") {
+            GFF3Reader gffReader = new GFF3Reader();
+            try {
+                gffFeatures = gffReader.read(gffFile);
+            } catch (Exception ex) {
+                System.out.println("problem reading gff file: " + ex);
+            }
+        }
+
     }
 
     static char findFastaConcat(long[] seqStart, long index) {
@@ -637,26 +648,85 @@ public class FindFRs {
 
     }
 
-    public static void main(String[] args) {
-        // parse args:
-        if (args.length != 7) {
-            System.out.println("Usage: java findFRs dotFile faFile alpha kappa minsup minlen rcBool");
-            System.out.println(Arrays.toString(args));
-            System.exit(0);
+    public static void main(String[] args) throws Exception {
+
+        Options options = new Options();
+
+        Option dotO = new Option("d", "dot", true, "dot file path");
+        dotO.setRequired(true);
+        options.addOption(dotO);
+
+        Option faO = new Option("f", "fasta", true, "fasta file");
+        faO.setRequired(true);
+        options.addOption(faO);
+
+        Option aO = new Option("a", "alpha", true, "alpha parameter");
+        aO.setRequired(true);
+        options.addOption(aO);
+
+        Option kO = new Option("k", "kappa", true, "kappa parameter");
+        kO.setRequired(true);
+        options.addOption(kO);
+
+        Option minSO = new Option("m", "minsup", true, "minsup parameter");
+        minSO.setRequired(false);
+        options.addOption(minSO);
+
+        Option minLO = new Option("l", "minlen", true, "minlen parameter");
+        minLO.setRequired(false);
+        options.addOption(minLO);
+
+        Option rcO = new Option("r", "rc", false, "rc flag");
+        rcO.setRequired(false);
+        options.addOption(rcO);
+
+        Option gffO = new Option("g", "gff", true, "gff file");
+        gffO.setRequired(false);
+        options.addOption(gffO);
+
+        Option gcO = new Option("c", "mingc", true, "min gene content fraction");
+        gcO.setRequired(false);
+        options.addOption(gcO);
+
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd;
+
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("FindFRs", options);
+
+            System.exit(1);
+            return;
         }
-        dotFile = args[0];
-        fastaFile = args[1];
-        //K = Integer.parseInt(args[2]);
-        alpha = Double.parseDouble(args[2]);
-        kappa = Integer.parseInt(args[3]);
-        minSup = Integer.parseInt(args[4]);
-        minLen = Integer.parseInt(args[5]);
-        useRC = args[6].startsWith("T") || args[6].startsWith("t");
+
+        dotFile = cmd.getOptionValue("dot");
+        fastaFile = cmd.getOptionValue("fasta");
+        alpha = Double.parseDouble(cmd.getOptionValue("alpha"));
+        kappa = Integer.parseInt(cmd.getOptionValue("kappa"));
+
+        if (cmd.hasOption("minsup")) {
+            minSup = Integer.parseInt(cmd.getOptionValue("minsup"));
+        }
+
+        if (cmd.hasOption("minlen")) {
+            minLen = Integer.parseInt(cmd.getOptionValue("minlen"));
+        }
+
+        useRC = cmd.hasOption("rc");
+
+        if (cmd.hasOption("gff")) {
+            gffFile = cmd.getOptionValue("gff");
+        }
+
+        if (cmd.hasOption("mingc")) {
+            minGC = Double.parseDouble(cmd.getOptionValue("mingc"));
+        }
 
         readData();
         buildPaths();
-
-        //startNode = new ClusterNode[g.numNodes];
         findFRs();
         outputResults();
     }
