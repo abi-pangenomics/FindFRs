@@ -330,7 +330,7 @@ public class FindFRs {
         // create initial edges
         edgeL = new ArrayList<ClusterEdge>();
         Set<ClusterNode> checkNodes = ConcurrentHashMap.newKeySet();
-        System.out.println("adding neighbors");
+        //System.out.println("adding neighbors");
         for (Integer N : nodeCluster.keySet()) {
             for (int i = 0; i < g.neighbor[N].length; i++) {
                 if (nodeCluster.containsKey(g.neighbor[N][i])) {
@@ -433,7 +433,7 @@ public class FindFRs {
             }
         } while (!edgeM.isEmpty());
 
-        System.out.println("finding root FRs");
+        //System.out.println("finding root FRs");
         Set<ClusterNode> roots = ConcurrentHashMap.newKeySet();
         nodeCluster.values().parallelStream().forEach((leaf) -> {
             roots.add(leaf.findRoot());
@@ -652,7 +652,7 @@ public class FindFRs {
 
         Options options = new Options();
 
-        Option dotO = new Option("d", "dot", true, "dot file path");
+        Option dotO = new Option("d", "dot", true, "dot file");
         dotO.setRequired(true);
         options.addOption(dotO);
 
