@@ -15,7 +15,7 @@ import org.apache.commons.io.*;
  */
 public class ReadInput {
 
-    public static Graph readDotFile(String fileName) {
+    public static Graph readDotFile(String filePath) {
 
         Graph g = new Graph();
         TreeMap<Integer, TreeSet<Integer>> nodeNeighbors = new TreeMap<Integer, TreeSet<Integer>>();
@@ -23,17 +23,20 @@ public class ReadInput {
         TreeMap<Integer, Integer> nodeLength = new TreeMap<Integer, Integer>();
         g.maxStart = 0;
         int minLen = Integer.MAX_VALUE;
-        System.out.println("reading dot file: " + fileName);
+        System.out.println("reading dot file: " + filePath);
 
-        FileInputStream inputStream = null;
-        Scanner sc = null;
+        //FileInputStream inputStream = null;
+        //Scanner sc = null;
+        String line = "";
         try {
-            inputStream = new FileInputStream(fileName);
-            sc = new Scanner(inputStream, "UTF-8");
-            //LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
-            //BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(fileName))));
-            while (sc.hasNextLine()) {
-                String line = sc.nextLine();
+            //inputStream = new FileInputStream(fileName);
+            //sc = new Scanner(inputStream, "UTF-8");
+            //LineIterator it = FileUtils.lineIterator(new File(filePath), "UTF-8");
+            BufferedReader br = new BufferedReader(new FileReader(filePath));
+
+            while ((line = br.readLine()) != null) {
+//            while (it.hasNext()) {
+//                String line = it.nextLine();
                 Scanner lineScanner;
                 if (line.contains("label")) { //node
                     lineScanner = new Scanner(line);
@@ -67,14 +70,17 @@ public class ReadInput {
                     //System.out.println("edge: " + tail + "->" + head);
                 }
             }
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (sc != null) {
-                sc.close();
-            }
+            br.close();
+            //LineIterator.closeQuietly(it);
+//            if (inputStream != null) {
+//                inputStream.close();
+//            }
+//            if (sc != null) {
+//                sc.close();
+//            }
         } catch (Exception ex) {
             System.err.println(ex);
+            System.err.println("last line: " + line);
             ex.printStackTrace();
             System.exit(-1);
         }
@@ -151,25 +157,25 @@ public class ReadInput {
     private static String[] description;
     private static String[] sequence;
 
-    static void readSequenceFromFile(String fileName) {
+    static void readSequenceFromFile(String filePath) {
         List desc = new ArrayList();
         List seq = new ArrayList();
         try {
-            LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
-            //BufferedReader in = new BufferedReader(new FileReader(file));
+            //LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
+            BufferedReader in = new BufferedReader(new FileReader(filePath));
             StringBuffer buffer = new StringBuffer();
 
-            if (!it.hasNext()) {
-                throw new IOException(fileName + " is an empty file");
+            String line = in.readLine();
+            if (line == null) {
+                throw new IOException(filePath + " is an empty file");
             }
-            String line = it.nextLine();
+
             if (line.charAt(0) != '>') {
-                throw new IOException("First line of " + fileName + " should start with '>'");
+                throw new IOException("First line of " + filePath + " should start with '>'");
             } else {
                 desc.add(line.substring(1));
             }
-            while (it.hasNext()) {
-                line = it.nextLine();
+            while ((line = in.readLine()) != null) {
                 //for (line = it.nextLine().trim(); line != null; line = it.nextLine()) {
                 if (line.length() > 0 && line.charAt(0) == '>') {
                     seq.add(buffer.toString());
@@ -183,7 +189,7 @@ public class ReadInput {
                 seq.add(buffer.toString());
             }
         } catch (IOException e) {
-            System.out.println("Error when reading " + fileName);
+            System.out.println("Error when reading " + filePath);
             e.printStackTrace();
         }
 
