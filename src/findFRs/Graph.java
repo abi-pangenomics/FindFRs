@@ -17,7 +17,7 @@ public class Graph {
     int numNodes;
     int[][] neighbor;
     long[][] starts;
-    int maxStart;
+    long maxStart;
     int[] length;
     TreeMap<Integer, TreeSet<Integer>> nodePaths;
     boolean[] containsN;

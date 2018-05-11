@@ -7,6 +7,7 @@ package findFRs;
 
 import java.io.*;
 import java.util.*;
+import org.apache.commons.io.*;
 
 /**
  *
@@ -18,15 +19,21 @@ public class ReadInput {
 
         Graph g = new Graph();
         TreeMap<Integer, TreeSet<Integer>> nodeNeighbors = new TreeMap<Integer, TreeSet<Integer>>();
-        TreeMap<Integer, ArrayList<Integer>> nodeStarts = new TreeMap<Integer, ArrayList<Integer>>();
+        TreeMap<Integer, ArrayList<Long>> nodeStarts = new TreeMap<Integer, ArrayList<Long>>();
         TreeMap<Integer, Integer> nodeLength = new TreeMap<Integer, Integer>();
         g.maxStart = 0;
         int minLen = Integer.MAX_VALUE;
         System.out.println("reading dot file: " + fileName);
+
+        FileInputStream inputStream = null;
+        Scanner sc = null;
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(fileName))));
-            String line;
-            while ((line = br.readLine()) != null) {
+            inputStream = new FileInputStream(fileName);
+            sc = new Scanner(inputStream, "UTF-8");
+            //LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
+            //BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(fileName))));
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
                 Scanner lineScanner;
                 if (line.contains("label")) { //node
                     lineScanner = new Scanner(line);
@@ -38,18 +45,18 @@ public class ReadInput {
                     label = label.split("\"")[1];
                     String[] l = label.split(":");
                     String[] starts = l[0].split(",");
-                    nodeStarts.put(node, new ArrayList<Integer>());
+                    nodeStarts.put(node, new ArrayList<Long>());
                     for (String s : starts) {
-                        int start = Integer.parseInt(s);
+                        long start = Long.parseLong(s);
                         nodeStarts.get(node).add(start);
                         g.maxStart = Math.max(g.maxStart, start);
                     }
                     int nodeLen = Integer.parseInt(l[1]);
                     minLen = Math.min(minLen, nodeLen);
                     nodeLength.put(node, Integer.parseInt(l[1]));
-//                    if (node % 50000 == 0) {
-//                        System.out.println("reading node: " + node);
-//                    }
+                    if (node % 50000 == 0) {
+                        System.out.println("reading node: " + node);
+                    }
                 }
                 if (line.contains("->")) { //edge
                     lineScanner = new Scanner(line);
@@ -60,11 +67,18 @@ public class ReadInput {
                     //System.out.println("edge: " + tail + "->" + head);
                 }
             }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (sc != null) {
+                sc.close();
+            }
         } catch (Exception ex) {
             System.err.println(ex);
             ex.printStackTrace();
             System.exit(-1);
         }
+
         System.out.println("K = " + minLen);
         FindFRs.K = minLen;
         g.numNodes = nodeNeighbors.keySet().size();
@@ -81,7 +95,7 @@ public class ReadInput {
         for (int i = 0; i < g.neighbor.length; i++) {
             g.starts[i] = new long[nodeStarts.get(i).size()];
             int j = 0;
-            for (Integer jobj : nodeStarts.get(i)) {
+            for (Long jobj : nodeStarts.get(i)) {
                 g.starts[i][j++] = jobj;
             }
         }
@@ -137,24 +151,26 @@ public class ReadInput {
     private static String[] description;
     private static String[] sequence;
 
-    static void readSequenceFromFile(String file) {
+    static void readSequenceFromFile(String fileName) {
         List desc = new ArrayList();
         List seq = new ArrayList();
         try {
-            BufferedReader in = new BufferedReader(new FileReader(file));
+            LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
+            //BufferedReader in = new BufferedReader(new FileReader(file));
             StringBuffer buffer = new StringBuffer();
-            String line = in.readLine();
 
-            if (line == null) {
-                throw new IOException(file + " is an empty file");
+            if (!it.hasNext()) {
+                throw new IOException(fileName + " is an empty file");
             }
-
+            String line = it.nextLine();
             if (line.charAt(0) != '>') {
-                throw new IOException("First line of " + file + " should start with '>'");
+                throw new IOException("First line of " + fileName + " should start with '>'");
             } else {
                 desc.add(line.substring(1));
             }
-            for (line = in.readLine().trim(); line != null; line = in.readLine()) {
+            while (it.hasNext()) {
+                line = it.nextLine();
+                //for (line = it.nextLine().trim(); line != null; line = it.nextLine()) {
                 if (line.length() > 0 && line.charAt(0) == '>') {
                     seq.add(buffer.toString());
                     buffer = new StringBuffer();
@@ -167,7 +183,7 @@ public class ReadInput {
                 seq.add(buffer.toString());
             }
         } catch (IOException e) {
-            System.out.println("Error when reading " + file);
+            System.out.println("Error when reading " + fileName);
             e.printStackTrace();
         }
 
