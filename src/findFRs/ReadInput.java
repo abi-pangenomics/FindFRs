@@ -146,7 +146,9 @@ public class ReadInput {
             for (Integer jobj : nodeNeighbors.get(i)) {
                 g.neighbor[i][j++] = jobj;
             }
+            nodeNeighbors.get(i).clear();
         }
+        nodeNeighbors.clear();
         g.starts = new long[g.numNodes][];
         for (int i = 0; i < g.neighbor.length; i++) {
             g.starts[i] = new long[nodeStarts.get(i).size()];
@@ -154,12 +156,15 @@ public class ReadInput {
             for (Long jobj : nodeStarts.get(i)) {
                 g.starts[i][j++] = jobj;
             }
+            nodeStarts.get(i).clear();
         }
+        nodeStarts.clear();
         g.length = new int[g.numNodes];
         for (int i = 0; i < g.neighbor.length; i++) {
             g.length[i] = nodeLength.get(i);
         }
-
+        nodeLength.clear();
+        
         return g;
     }
 
