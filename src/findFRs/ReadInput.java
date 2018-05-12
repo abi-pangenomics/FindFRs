@@ -5,6 +5,10 @@
  */
 package findFRs;
 
+import static findFRs.FindFRs.g;
+import static findFRs.FindFRs.paths;
+import static findFRs.FindFRs.sequences;
+import static findFRs.FindFRs.startToNode;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.io.*;
@@ -164,59 +168,25 @@ public class ReadInput {
             g.length[i] = nodeLength.get(i);
         }
         nodeLength.clear();
-        
+
         return g;
     }
 
-    public static ArrayList<Sequence> readFastaFile(String fileName) {
-        int numSeqRead = 0;
+//    private static String[] description;
+//    private static String[] sequence;
+    public static ArrayList<Sequence> readFastaFile(String filePath) {
+        //int numSeqRead = 0;
         ArrayList<Sequence> sequences = new ArrayList<Sequence>();
-        System.out.println("reading fasta file: " + fileName);
-        readSequenceFromFile(fileName);
-        for (int i = 0; i < description.length; i++) {
-            Sequence s = new Sequence();
-            s.label = description[i].replace(',', ';'); //description[i].split(" ")[0];
-            s.seq = sequence[i];
-            sequences.add(s);
-        }
+        System.out.println("reading fasta file: " + filePath);
 
-        return sequences;
-
-//        try {
-//            BufferedReader br = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(fileName))));
-//            //BufferedReader br = new BufferedReader(new FileReader(fileName));
-//            String line;
-//            while ((line = br.readLine()) != null) {
-//                if (line.contains(">")) { // new sequence
-//                    String label = line.substring(1, line.length());
-//                    Sequence nextSeq = new Sequence();
-//                    nextSeq.label = label.split(" ")[0]; // get what is left of first space
-//                    nextSeq.seq = "";
-//                    sequences.add(nextSeq);
-//                    numSeqRead++;
-//                    if (numSeqRead % 100 == 0) {
-//                        System.out.println("read seq: " + numSeqRead);
-//                    }
-//                } else { // sequence
-//                    Sequence lastSeq = sequences.get(sequences.size() - 1);
-//                    lastSeq.seq += line.toUpperCase();
-//                }
-//            }
-//        } catch (Exception ex) {
-//            System.err.println(ex);
-//            ex.printStackTrace();
-//            System.exit(-1);
-//        }
-    }
-
-    private static String[] description;
-    private static String[] sequence;
-
-    static void readSequenceFromFile(String filePath) {
-        List desc = new ArrayList();
-        List seq = new ArrayList();
+        long curStart = 1;
+        TreeMap<Integer, Long> seqStart = new TreeMap<Integer, Long>();
+        int index = 0;
+        seqStart.put(0, (long) 1);
+        long seqEnd;
+        ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
+        TreeSet<Long> Nlocs = new TreeSet<Long>();
         try {
-            //LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
             BufferedReader in = new BufferedReader(new FileReader(filePath));
             StringBuffer buffer = new StringBuffer();
 
@@ -225,38 +195,177 @@ public class ReadInput {
                 throw new IOException(filePath + " is an empty file");
             }
 
+            String desc = "", seq = "";
             if (line.charAt(0) != '>') {
                 throw new IOException("First line of " + filePath + " should start with '>'");
             } else {
-                desc.add(line.substring(1));
+                desc = line.substring(1);
             }
             while ((line = in.readLine()) != null) {
-                //for (line = it.nextLine().trim(); line != null; line = it.nextLine()) {
                 if (line.length() > 0 && line.charAt(0) == '>') {
-                    seq.add(buffer.toString());
+                    seq = buffer.toString();
+                    // desc, seq are the next fasta sequence here
+                    Sequence s = new Sequence();
+                    s.label = desc.replace(',', ';');
+                    s.length = seq.length();
+                    s.startPos = seqStart.get(index);
+                    sequences.add(s);
+                    for (int k = 0; k < seq.length(); k++) {
+                        if (seq.charAt(k) == 'N') {
+                            Nlocs.add(s.startPos + k);
+                        }
+                    }
+
+                    ArrayList path = new ArrayList<Integer>();
+                    seqEnd = seqStart.get(index) + s.length - 1;
+                    curStart = seqStart.get(index);
+                    while (curStart > 0 && !startToNode.containsKey(curStart)) {
+                        curStart--;
+                    }
+                    path.add(startToNode.get(curStart));
+                    do {
+                        curStart += FindFRs.g.length[startToNode.get(curStart)] - (FindFRs.K - 1);
+                        if (startToNode.containsKey(curStart)) {
+                            path.add(startToNode.get(curStart));
+                        }
+                    } while (startToNode.containsKey(curStart) && curStart
+                            + FindFRs.g.length[startToNode.get(curStart)] - 1 < seqEnd);
+
+                    pathsAL.add(path);
+                    seqStart.put(++index, seqEnd + 2);
+
                     buffer = new StringBuffer();
-                    desc.add(line.substring(1));
+                    desc = line.substring(1);
                 } else {
                     buffer.append(line.trim().toUpperCase());
                 }
             }
             if (buffer.length() != 0) {
-                seq.add(buffer.toString());
+                seq = buffer.toString();
+                // desc, seq are the next fasta sequence here
+                Sequence s = new Sequence();
+                s.label = desc.replace(',', ';');
+                s.length = seq.length();
+                s.startPos = seqStart.get(index);
+                sequences.add(s);
+                for (int k = 0; k < seq.length(); k++) {
+                    if (seq.charAt(k) == 'N') {
+                        Nlocs.add(s.startPos + k);
+                    }
+                }
+
+                ArrayList path = new ArrayList<Integer>();
+                seqEnd = seqStart.get(index) + s.length - 1;
+                curStart = seqStart.get(index);
+                while (curStart > 0 && !startToNode.containsKey(curStart)) {
+                    curStart--;
+                }
+                path.add(startToNode.get(curStart));
+                do {
+                    curStart += FindFRs.g.length[startToNode.get(curStart)] - (FindFRs.K - 1);
+                    if (startToNode.containsKey(curStart)) {
+                        path.add(startToNode.get(curStart));
+                    }
+                } while (startToNode.containsKey(curStart) && curStart
+                        + FindFRs.g.length[startToNode.get(curStart)] - 1 < seqEnd);
+
+                pathsAL.add(path);
+                seqStart.put(++index, seqEnd + 2);
+
             }
         } catch (IOException e) {
             System.out.println("Error when reading " + filePath);
             e.printStackTrace();
         }
 
-        description = new String[desc.size()];
-        sequence = new String[seq.size()];
-        for (int i = 0; i < seq.size(); i++) {
-            description[i] = (String) desc.get(i);
-            sequence[i] = (String) seq.get(i);
+        System.out.println("number of paths: " + pathsAL.size());
+
+        paths = new int[pathsAL.size()][];
+        for (int i = 0; i < pathsAL.size(); i++) {
+            ArrayList<Integer> path = pathsAL.get(i);
+            paths[i] = new int[path.size()];
+            for (int j = 0; j < path.size(); j++) {
+                paths[i][j] = path.get(j);
+            }
         }
 
+        pathsAL.clear();
+        pathsAL = null; // can be gc'ed
+
+        System.out.println("finding node paths");
+
+        g.containsN = new boolean[g.numNodes];
+        for (int i = 0; i < g.numNodes; i++) {
+            g.containsN[i] = false;
+            Long test = Nlocs.ceiling(g.starts[i][0]);
+            if (test != null && test.longValue() < g.starts[i][0] + g.length[i]) {
+                g.containsN[i] = true;
+            }
+        }
+
+        // find paths for each node:
+        g.nodePaths = new TreeMap<Integer, TreeSet<Integer>>();
+        for (int i = 0; i < g.numNodes; i++) {
+            if (!g.containsN[i]) {
+                g.nodePaths.put(i, new TreeSet<Integer>());
+            }
+        }
+
+        for (int i = 0; i < paths.length; i++) {
+            for (int j = 0; j < paths[i].length; j++) {
+                if (!g.containsN[paths[i][j]]) {
+                    g.nodePaths.get(paths[i][j]).add(i);
+                }
+            }
+        }
+
+        return sequences;
     }
 
+//    static void readSequenceFromFile(String filePath) {
+//        List desc = new ArrayList();
+//        List seq = new ArrayList();
+//        try {
+//            //LineIterator it = FileUtils.lineIterator(new File(fileName), "UTF-8");
+//            BufferedReader in = new BufferedReader(new FileReader(filePath));
+//            StringBuffer buffer = new StringBuffer();
+//
+//            String line = in.readLine();
+//            if (line == null) {
+//                throw new IOException(filePath + " is an empty file");
+//            }
+//
+//            if (line.charAt(0) != '>') {
+//                throw new IOException("First line of " + filePath + " should start with '>'");
+//            } else {
+//                desc.add(line.substring(1));
+//            }
+//            while ((line = in.readLine()) != null) {
+//                //for (line = it.nextLine().trim(); line != null; line = it.nextLine()) {
+//                if (line.length() > 0 && line.charAt(0) == '>') {
+//                    seq.add(buffer.toString());
+//                    buffer = new StringBuffer();
+//                    desc.add(line.substring(1));
+//                } else {
+//                    buffer.append(line.trim().toUpperCase());
+//                }
+//            }
+//            if (buffer.length() != 0) {
+//                seq.add(buffer.toString());
+//            }
+//        } catch (IOException e) {
+//            System.out.println("Error when reading " + filePath);
+//            e.printStackTrace();
+//        }
+//
+//        description = new String[desc.size()];
+//        sequence = new String[seq.size()];
+//        for (int i = 0; i < seq.size(); i++) {
+//            description[i] = (String) desc.get(i);
+//            sequence[i] = (String) seq.get(i);
+//        }
+//
+//    }
 //    //return first sequence as a String
 //    public String getSequence() {
 //        return sequence[0];

@@ -11,7 +11,7 @@ package findFRs;
  */
 public class Sequence {
     String label;
-    String seq;
+    //String seq;
     int length;
     long startPos;
 }

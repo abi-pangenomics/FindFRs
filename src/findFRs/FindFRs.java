@@ -100,118 +100,109 @@ public class FindFRs {
 
         sequences = ReadInput.readFastaFile(fastaFile);
 
-//        if (gffFile != "") {
-//            GFF3Reader gffReader = new GFF3Reader();
-//            try {
-//                gffFeatures = gffReader.read(gffFile);
-//            } catch (Exception ex) {
-//                System.out.println("problem reading gff file: " + ex);
+    }
+
+//    static char findFastaConcat(long[] seqStart, long index) {
+//        int i = 0;
+//        int min = 0;
+//        int max = seqStart.length - 1;
+//        int mid = (min + max + 1) / 2;
+//        while (min < max) {
+//            if (seqStart[mid] < index) {
+//                min = mid;
+//                mid = (min + max + 1) / 2;
+//
+//            } else if (seqStart[mid] == index) {
+//                min = max = mid;
+//            } else if (seqStart[mid] > index) {
+//                max = mid - 1;
+//                mid = (min + max + 1) / 2;
 //            }
 //        }
+//        i = mid;
+//        if (index - seqStart[i] == sequences.get(i).seq.length()) {
+//            return '$';
+//        }
+//
+//        return sequences.get(i).seq.charAt((int) (index - seqStart[i]));
+//
+//    }
 
-    }
-
-    static char findFastaConcat(long[] seqStart, long index) {
-        int i = 0;
-        int min = 0;
-        int max = seqStart.length - 1;
-        int mid = (min + max + 1) / 2;
-        while (min < max) {
-            if (seqStart[mid] < index) {
-                min = mid;
-                mid = (min + max + 1) / 2;
-
-            } else if (seqStart[mid] == index) {
-                min = max = mid;
-            } else if (seqStart[mid] > index) {
-                max = mid - 1;
-                mid = (min + max + 1) / 2;
-            }
-        }
-        i = mid;
-        if (index - seqStart[i] == sequences.get(i).seq.length()) {
-            return '$';
-        }
-
-        return sequences.get(i).seq.charAt((int) (index - seqStart[i]));
-
-    }
-
-    static void buildPaths() {
-        ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
-        long curStart = 1;
-        long seqStart[] = new long[sequences.size()];
-        int index = 0;
-        seqStart[0] = 1;
-        long seqEnd;
-        for (Sequence s : sequences) {
-            ArrayList path = new ArrayList<Integer>();
-            s.startPos = seqStart[index];
-            s.length = s.seq.length();
-            seqEnd = seqStart[index] + s.length - 1;
-            curStart = seqStart[index];
-            while (curStart > 0 && !startToNode.containsKey(curStart)) {
-                curStart--;
-            }
-            path.add(startToNode.get(curStart));
-            do {
-                curStart += g.length[startToNode.get(curStart)] - (K - 1);
-                if (startToNode.containsKey(curStart)) {
-                    path.add(startToNode.get(curStart));
-                }
-            } while (startToNode.containsKey(curStart) && curStart + g.length[startToNode.get(curStart)] - 1 < seqEnd);
-
-            pathsAL.add(path);
-            if (index < sequences.size() - 1) {
-                seqStart[++index] = seqEnd + 2;
-            }
-        }
-        System.out.println("number of paths: " + pathsAL.size());
-
-        paths = new int[pathsAL.size()][];
-        for (int i = 0; i < pathsAL.size(); i++) {
-            ArrayList<Integer> path = pathsAL.get(i);
-            paths[i] = new int[path.size()];
-            for (int j = 0; j < path.size(); j++) {
-                paths[i][j] = path.get(j);
-            }
-        }
-
-        pathsAL.clear();
-        pathsAL = null; // can be gc'ed
-
-        System.out.println("finding node paths");
-
-        g.containsN = new boolean[g.numNodes];
-        for (int i = 0; i < g.numNodes; i++) {
-            g.containsN[i] = false;
-            for (int j = 0; j < g.length[i]; j++) {
-                if (findFastaConcat(seqStart, g.starts[i][0] + j) == 'N') {
-//                        || findFastaConcat(seqStart, g.starts[i][0] + j) == '$') {
-                    g.containsN[i] = true;
-                    //System.out.println("node " + i + " contains N; ignored for FRs");
-                    break;
-                }
-            }
-        }
-
-        // find paths for each node:
-        g.nodePaths = new TreeMap<Integer, TreeSet<Integer>>();
-        for (int i = 0; i < g.numNodes; i++) {
-            if (!g.containsN[i]) {
-                g.nodePaths.put(i, new TreeSet<Integer>());
-            }
-        }
-
-        for (int i = 0; i < paths.length; i++) {
-            for (int j = 0; j < paths[i].length; j++) {
-                if (!g.containsN[paths[i][j]]) {
-                    g.nodePaths.get(paths[i][j]).add(i);
-                }
-            }
-        }
-
-    }
+//    static void buildPaths() {
+//        ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
+//        long curStart = 1;
+//        long seqStart[] = new long[sequences.size()];
+//        int index = 0;
+//        seqStart[0] = 1;
+//        long seqEnd;
+//        for (Sequence s : sequences) {
+//            ArrayList path = new ArrayList<Integer>();
+//            s.startPos = seqStart[index];
+//            s.length = s.seq.length();
+//            seqEnd = seqStart[index] + s.length - 1;
+//            curStart = seqStart[index];
+//            while (curStart > 0 && !startToNode.containsKey(curStart)) {
+//                curStart--;
+//            }
+//            path.add(startToNode.get(curStart));
+//            do {
+//                curStart += g.length[startToNode.get(curStart)] - (K - 1);
+//                if (startToNode.containsKey(curStart)) {
+//                    path.add(startToNode.get(curStart));
+//                }
+//            } while (startToNode.containsKey(curStart) && curStart + g.length[startToNode.get(curStart)] - 1 < seqEnd);
+//
+//            pathsAL.add(path);
+//            if (index < sequences.size() - 1) {
+//                seqStart[++index] = seqEnd + 2;
+//            }
+//        }
+//        System.out.println("number of paths: " + pathsAL.size());
+//
+//        paths = new int[pathsAL.size()][];
+//        for (int i = 0; i < pathsAL.size(); i++) {
+//            ArrayList<Integer> path = pathsAL.get(i);
+//            paths[i] = new int[path.size()];
+//            for (int j = 0; j < path.size(); j++) {
+//                paths[i][j] = path.get(j);
+//            }
+//        }
+//
+//        pathsAL.clear();
+//        pathsAL = null; // can be gc'ed
+//
+//        System.out.println("finding node paths");
+//
+//        g.containsN = new boolean[g.numNodes];
+//        for (int i = 0; i < g.numNodes; i++) {
+//            g.containsN[i] = false;
+//            for (int j = 0; j < g.length[i]; j++) {
+//                if (findFastaConcat(seqStart, g.starts[i][0] + j) == 'N') {
+////                        || findFastaConcat(seqStart, g.starts[i][0] + j) == '$') {
+//                    g.containsN[i] = true;
+//                    //System.out.println("node " + i + " contains N; ignored for FRs");
+//                    break;
+//                }
+//            }
+//        }
+//
+//        // find paths for each node:
+//        g.nodePaths = new TreeMap<Integer, TreeSet<Integer>>();
+//        for (int i = 0; i < g.numNodes; i++) {
+//            if (!g.containsN[i]) {
+//                g.nodePaths.put(i, new TreeSet<Integer>());
+//            }
+//        }
+//
+//        for (int i = 0; i < paths.length; i++) {
+//            for (int j = 0; j < paths[i].length; j++) {
+//                if (!g.containsN[paths[i][j]]) {
+//                    g.nodePaths.get(paths[i][j]).add(i);
+//                }
+//            }
+//        }
+//
+//    }
 
     static int gap(int[] path, int start, int stop) {
         int curStartLoc = 1;
@@ -726,7 +717,7 @@ public class FindFRs {
 //        }
 
         readData();
-        buildPaths();
+        //buildPaths();
         findFRs();
         outputResults();
     }
