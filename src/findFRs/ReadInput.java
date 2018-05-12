@@ -15,6 +15,8 @@ import org.apache.commons.io.*;
  */
 public class ReadInput {
 
+    static int BUFSIZE = 10000;
+
     public static Graph readDotFile(String filePath) {
 
         Graph g = new Graph();
@@ -25,62 +27,110 @@ public class ReadInput {
         int minLen = Integer.MAX_VALUE;
         System.out.println("reading dot file: " + filePath);
 
-        //FileInputStream inputStream = null;
-        //Scanner sc = null;
-        String line = "";
         try {
-            //inputStream = new FileInputStream(fileName);
-            //sc = new Scanner(inputStream, "UTF-8");
-            //LineIterator it = FileUtils.lineIterator(new File(filePath), "UTF-8");
             BufferedReader br = new BufferedReader(new FileReader(filePath));
+            char[] c = new char[(2 * BUFSIZE)];
+            br.read(c, 0, BUFSIZE);
+            int r = 0, pos = 0, par = 1;
+            long v = 0;
+            boolean innumber = false, readfirst = false, labelline = false, colon = false;
+            int firstN = -1;
+            while (true) {
+                if (c[pos] >= '0' && c[pos] <= '9') {
+                    v = 10 * v + (c[pos] - '0');
+                    innumber = true;
+                } else {
+                    if (innumber) {
+                        if (!readfirst) {
+                            firstN = (int) v;
+                            readfirst = true;
+                            //System.out.println("first: " + v);
+                            if (!nodeStarts.containsKey(firstN)) {
+                                nodeStarts.put(firstN, new ArrayList<Long>());
+                            }
+                        } else if (labelline && !colon) {
+                            //System.out.println("start: " + v);
+                            nodeStarts.get(firstN).add(v);
+                            g.maxStart = Math.max(g.maxStart, v);
+                        } else if (labelline && colon) {
+                            //System.out.println("length: " + v);
+                            nodeLength.put(firstN, (int) v);
+                            nodeNeighbors.put(firstN, new TreeSet<Integer>());
+                            minLen = Math.min(minLen, (int) v);
 
-            while ((line = br.readLine()) != null) {
-//            while (it.hasNext()) {
-//                String line = it.nextLine();
-                Scanner lineScanner;
-                if (line.contains("label")) { //node
-                    lineScanner = new Scanner(line);
-                    lineScanner.useDelimiter(" ");
-                    lineScanner.next();
-                    int node = Integer.parseInt(lineScanner.next().trim());
-                    nodeNeighbors.put(node, new TreeSet<Integer>());
-                    String label = lineScanner.next();
-                    label = label.split("\"")[1];
-                    String[] l = label.split(":");
-                    String[] starts = l[0].split(",");
-                    nodeStarts.put(node, new ArrayList<Long>());
-                    for (String s : starts) {
-                        long start = Long.parseLong(s);
-                        nodeStarts.get(node).add(start);
-                        g.maxStart = Math.max(g.maxStart, start);
+                            if (firstN % 50000 == 0) {
+                                System.out.println("reading node: " + firstN);
+                            }
+                        } else if (!labelline) {
+                            //System.out.println("to: " + v);
+                            nodeNeighbors.get(firstN).add((int) v);
+                        }
+                        v = 0;
+                        innumber = false;
                     }
-                    int nodeLen = Integer.parseInt(l[1]);
-                    minLen = Math.min(minLen, nodeLen);
-                    nodeLength.put(node, Integer.parseInt(l[1]));
-                    if (node % 50000 == 0) {
-                        System.out.println("reading node: " + node);
+                    if (c[pos] == '[') {
+                        labelline = true;
+                    }
+                    if (c[pos] == ':') {
+                        colon = true;
+                    }
+                    if (c[pos] == '\n') {
+                        readfirst = false;
+                        labelline = false;
+                        colon = false;
+                    }
+                    if (c[pos] == '}') {
+                        break;
                     }
                 }
-                if (line.contains("->")) { //edge
-                    lineScanner = new Scanner(line);
-                    lineScanner.useDelimiter("->");
-                    int tail = Integer.parseInt(lineScanner.next().trim());
-                    int head = Integer.parseInt(lineScanner.next().trim());
-                    nodeNeighbors.get(tail).add(head);
-                    //System.out.println("edge: " + tail + "->" + head);
+
+                int mid = BUFSIZE * par;
+                int end = (mid + BUFSIZE) % (2 * BUFSIZE);
+                pos = (pos + 1) % (2 * BUFSIZE);
+                if (pos == mid) {
+                    r = br.read(c, mid, BUFSIZE);
+                    par = 1 - par;
                 }
             }
+
+//                while ((line = br.readLine()) != null) {
+//                    Scanner lineScanner;
+//                    if (line.contains("label")) { //node
+//                        lineScanner = new Scanner(line);
+//                        lineScanner.useDelimiter(" ");
+//                        lineScanner.next();
+//                        int node = Integer.parseInt(lineScanner.next().trim());
+//                        nodeNeighbors.put(node, new TreeSet<Integer>());
+//                        String label = lineScanner.next();
+//                        label = label.split("\"")[1];
+//                        String[] l = label.split(":");
+//                        String[] starts = l[0].split(",");
+//                        nodeStarts.put(node, new ArrayList<Long>());
+//                        for (String s : starts) {
+//                            long start = Long.parseLong(s);
+//                            nodeStarts.get(node).add(start);
+//                            g.maxStart = Math.max(g.maxStart, start);
+//                        }
+//                        int nodeLen = Integer.parseInt(l[1]);
+//                        minLen = Math.min(minLen, nodeLen);
+//                        nodeLength.put(node, Integer.parseInt(l[1]));
+//                        if (node % 50000 == 0) {
+//                            System.out.println("reading node: " + node);
+//                        }
+//                    }
+//                    if (line.contains("->")) { //edge
+//                        lineScanner = new Scanner(line);
+//                        lineScanner.useDelimiter("->");
+//                        int tail = Integer.parseInt(lineScanner.next().trim());
+//                        int head = Integer.parseInt(lineScanner.next().trim());
+//                        nodeNeighbors.get(tail).add(head);
+//                        //System.out.println("edge: " + tail + "->" + head);
+//                    }
+//                }
             br.close();
-            //LineIterator.closeQuietly(it);
-//            if (inputStream != null) {
-//                inputStream.close();
-//            }
-//            if (sc != null) {
-//                sc.close();
-//            }
+
         } catch (Exception ex) {
             System.err.println(ex);
-            System.err.println("last line: " + line);
             ex.printStackTrace();
             System.exit(-1);
         }
