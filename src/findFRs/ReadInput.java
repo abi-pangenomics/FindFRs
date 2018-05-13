@@ -7,11 +7,9 @@ package findFRs;
 
 import static findFRs.FindFRs.g;
 import static findFRs.FindFRs.paths;
-import static findFRs.FindFRs.sequences;
 import static findFRs.FindFRs.startToNode;
 import java.io.*;
 import java.util.*;
-import org.apache.commons.io.*;
 
 /**
  *
@@ -25,7 +23,7 @@ public class ReadInput {
 
         Graph g = new Graph();
         TreeMap<Integer, TreeSet<Integer>> nodeNeighbors = new TreeMap<Integer, TreeSet<Integer>>();
-        TreeMap<Integer, ArrayList<Long>> nodeStarts = new TreeMap<Integer, ArrayList<Long>>();
+        TreeMap<Integer, Long> anyNStarts = new TreeMap<Integer, Long>();
         TreeMap<Integer, Integer> nodeLength = new TreeMap<Integer, Integer>();
         g.maxStart = 0;
         int minLen = Integer.MAX_VALUE;
@@ -49,12 +47,12 @@ public class ReadInput {
                             firstN = (int) v;
                             readfirst = true;
                             //System.out.println("first: " + v);
-                            if (!nodeStarts.containsKey(firstN)) {
-                                nodeStarts.put(firstN, new ArrayList<Long>());
-                            }
                         } else if (labelline && !colon) {
                             //System.out.println("start: " + v);
-                            nodeStarts.get(firstN).add(v);
+                            if (!anyNStarts.containsKey(firstN)) {
+                                anyNStarts.put(firstN, v);
+                            }
+                            startToNode.put(v, firstN);
                             g.maxStart = Math.max(g.maxStart, v);
                         } else if (labelline && colon) {
                             //System.out.println("length: " + v);
@@ -153,16 +151,12 @@ public class ReadInput {
             nodeNeighbors.get(i).clear();
         }
         nodeNeighbors.clear();
-        g.starts = new long[g.numNodes][];
+
+        g.anyNodeStart = new long[g.numNodes];
         for (int i = 0; i < g.neighbor.length; i++) {
-            g.starts[i] = new long[nodeStarts.get(i).size()];
-            int j = 0;
-            for (Long jobj : nodeStarts.get(i)) {
-                g.starts[i][j++] = jobj;
-            }
-            nodeStarts.get(i).clear();
+            g.anyNodeStart[i] = anyNStarts.get(i);
         }
-        nodeStarts.clear();
+        anyNStarts.clear();
         g.length = new int[g.numNodes];
         for (int i = 0; i < g.neighbor.length; i++) {
             g.length[i] = nodeLength.get(i);
@@ -297,8 +291,8 @@ public class ReadInput {
         g.containsN = new boolean[g.numNodes];
         for (int i = 0; i < g.numNodes; i++) {
             g.containsN[i] = false;
-            Long test = Nlocs.ceiling(g.starts[i][0]);
-            if (test != null && test.longValue() < g.starts[i][0] + g.length[i]) {
+            Long test = Nlocs.ceiling(g.anyNodeStart[i]);
+            if (test != null && test.longValue() < g.anyNodeStart[i] + g.length[i]) {
                 g.containsN[i] = true;
             }
         }

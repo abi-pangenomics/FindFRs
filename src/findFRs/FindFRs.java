@@ -28,8 +28,8 @@ public class FindFRs {
 
     static Graph g;
     static ArrayList<Sequence> sequences;
-    static char[] fastaConcat;
-    static int fastaConcatLen;
+    //static char[] fastaConcat;
+    //static int fastaConcatLen;
     static TreeMap<Long, Integer> startToNode;
     static int[][] paths;
 
@@ -39,7 +39,6 @@ public class FindFRs {
     static int numClusterNodes = 0;
 
 //    static FeatureList gffFeatures;
-
     static String[] colors = {"122,39,25", "92,227,60", "225,70,233", "100,198,222", "232,176,49", "50,39,85",
         "67,101,33", "222,142,186", "92,119,227", "206,225,151", "227,44,118", "229,66,41",
         "47,36,24", "225,167,130", "120,132,131", "104,232,178", "158,43,133", "228,228,42", "213,217,213",
@@ -86,18 +85,8 @@ public class FindFRs {
         "yellow", "yellowgreen"};
 
     static void readData() {
-        g = ReadInput.readDotFile(dotFile);
-
         startToNode = new TreeMap<Long, Integer>();
-        for (int i = 0; i < g.starts.length; i++) {
-            for (int j = 0; j < g.starts[i].length; j++) {
-                startToNode.put(g.starts[i][j], i);
-            }
-            long firstStart = g.starts[i][0];
-            g.starts[i] = new long[1]; // only save 1st start
-            g.starts[i][0] = firstStart;
-        }
-
+        g = ReadInput.readDotFile(dotFile);
         sequences = ReadInput.readFastaFile(fastaFile);
 
     }
@@ -127,7 +116,6 @@ public class FindFRs {
 //        return sequences.get(i).seq.charAt((int) (index - seqStart[i]));
 //
 //    }
-
 //    static void buildPaths() {
 //        ArrayList<ArrayList<Integer>> pathsAL = new ArrayList<ArrayList<Integer>>();
 //        long curStart = 1;
@@ -203,7 +191,6 @@ public class FindFRs {
 //        }
 //
 //    }
-
     static int gap(int[] path, int start, int stop) {
         int curStartLoc = 1;
         int curEndLoc = 1;
@@ -678,7 +665,6 @@ public class FindFRs {
 //        Option gcO = new Option("c", "mingc", true, "min gene content fraction");
 //        gcO.setRequired(false);
 //        options.addOption(gcO);
-
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -715,7 +701,6 @@ public class FindFRs {
 //        if (cmd.hasOption("mingc")) {
 //            minGC = Double.parseDouble(cmd.getOptionValue("mingc"));
 //        }
-
         readData();
         //buildPaths();
         findFRs();

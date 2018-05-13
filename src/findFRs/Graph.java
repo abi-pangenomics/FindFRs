@@ -16,7 +16,7 @@ public class Graph {
     String name;
     int numNodes;
     int[][] neighbor;
-    long[][] starts;
+    long[] anyNodeStart;
     long maxStart;
     int[] length;
     TreeMap<Integer, TreeSet<Integer>> nodePaths;
