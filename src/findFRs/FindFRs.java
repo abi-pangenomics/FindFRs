@@ -200,7 +200,8 @@ public class FindFRs {
         }
         int gp = curEndLoc - g.length[path[start]] - g.length[path[stop]];
         if (gp <= 0) {
-            return Integer.MAX_VALUE;
+            //return Integer.MAX_VALUE; bug!! found 5/31/2018
+            gp = 0;
         }
         return gp;
     }
