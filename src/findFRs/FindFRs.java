@@ -23,6 +23,7 @@ public class FindFRs {
     static int kappa = 0; // maxInsert parameter
     static int minSup = 1;
     static int minLen = 1;
+    static int minSize = 1;
     static boolean useRC = false; // indicates if fasta file was appended with its reverse-complement
     //static double minGC = 0.0;
 
@@ -485,7 +486,7 @@ public class FindFRs {
         ClusterNode top;
         ArrayList<ClusterNode> iFRs = new ArrayList<ClusterNode>();
         while ((top = iFRQ.poll()) != null) {
-            if (top.avgLen >= minLen) {
+            if (top.avgLen >= minLen && top.size >= minSize) {
                 iFRs.add(top);
             }
         }
@@ -655,6 +656,10 @@ public class FindFRs {
         minLO.setRequired(false);
         options.addOption(minLO);
 
+        Option minZO = new Option("z", "minsize", true, "minsize parameter");
+        minZO.setRequired(false);
+        options.addOption(minZO);
+
         Option rcO = new Option("r", "rc", false, "rc flag");
         rcO.setRequired(false);
         options.addOption(rcO);
@@ -691,6 +696,10 @@ public class FindFRs {
 
         if (cmd.hasOption("minlen")) {
             minLen = Integer.parseInt(cmd.getOptionValue("minlen"));
+        }
+
+        if (cmd.hasOption("minsize")) {
+            minSize = Integer.parseInt(cmd.getOptionValue("minsize"));
         }
 
         useRC = cmd.hasOption("rc");
