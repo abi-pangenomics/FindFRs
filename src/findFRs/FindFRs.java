@@ -492,7 +492,7 @@ public class FindFRs {
         }
 
         try {
-            String paramString = "-a" + alpha + "-kp" + kappa + "-sup" + minSup;// + "-mlen" + minLen;
+            String paramString = "-a" + alpha + "-kp" + kappa + "-sup" + minSup + "-sz" + minSize;  // + "-mlen" + minLen;
             if (useRC) {
                 paramString += "-rc";
             }
@@ -629,6 +629,7 @@ public class FindFRs {
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println("FindFRs 2.0, last rev. 7-June-2018, copyright 2018");
 
         Options options = new Options();
 
