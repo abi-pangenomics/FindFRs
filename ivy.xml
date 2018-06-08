@@ -1,0 +1,6 @@
+<ivy-module version="2.0">
+    <info organisation="apache" module="FindFRs"/>
+    <dependencies>
+        <dependency org="commons-cli" name="commons-cli" rev="1.4" conf="default->master"/>
+    </dependencies>
+</ivy-module>
