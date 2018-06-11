@@ -41,6 +41,9 @@ This is referred to as the _minimum support_.
 `minsize` is the minimum size (measured in de Bruijn nodes) that an FR that meets the other parameters must be in order to be considered frequent.
 This is referred to as the _minimum size_.
 
+It is too early in the project to recommend explicit parameters, but typical values for
+`alpha` are in the range 0.6 - 0.9 and typical values for `kappa` are between 0 - 3000.
+
 ## De Bruijn Graphs
 FrinFRs consumes de Bruijn graphs in the `dot` file format.
 A `dot` file representation of a pan-genome De Bruijn graph can be constructed from a `fasta` using the one of the programs presented in the following works:
