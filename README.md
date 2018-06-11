@@ -3,6 +3,7 @@ FindFRs is a Java implementation of the Frequented Regions algorithm presented a
 A _Frequented Region_ (FR) is a region in a pan-genome de Bruijn graph that is frequently traversed by a subset of the genome paths in the graph.
 A path that contributes to an FR being frequent is called a _supporting path_.
 The algorithm works by iteratively constructing FRs via hierarchical aglomerative clsutering and then traversing the hierarchy and selecting nodes that qualify as clusters according to the given parameters.
+
 If you just want to run the program, download the file `FindFRs.jar` from the latest release.  If you would like to 
 compile the source code, following the instructions below.  It is also possible to build the project within
 [Netbeans](http://netbeans.org)
@@ -56,7 +57,7 @@ where `<dotFile>` is the pan-genome de Bruijn graph constructed for the `<faFile
 ## Output
 FindFRs produces output in several files.  The files are stored in an output directory that is named based on the input .dot and .fasta files used.  The following files types are produced:
 
-`.bed` : this file indicates the supporting subpath segments found for each FR in .bed format
+`.bed` : this file indicates the supporting subpath segments found for each FR in [bed](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format
 
 `.dist.txt` : this file lists the support and average supporing path length of each FR
 
